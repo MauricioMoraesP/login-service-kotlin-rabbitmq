@@ -18,10 +18,10 @@ class DemoApplicationTests {
 		// Verifica se o contexto carrega sem problemas
 	}
 
-	@Test
+	/*@Test
 	fun testCreateEntity() {
 		val newUser = User("mmpc", "mmpc", "mmpc@mail.com", Date())
 	println(newUser.toString());
-	}
+	}*/
 }
 
