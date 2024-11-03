@@ -2,7 +2,11 @@ package com.login.demo.model
 
 import com.login.demo.enumerations.TypeUsers
 import jakarta.persistence.*
-     import org.springframework.security.core.GrantedAuthority
+import jakarta.validation.constraints.Email
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.NotNull
+import jakarta.validation.constraints.Size
+import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
   import java.util.Date
@@ -14,8 +18,14 @@ class User() : UserDetails {
     @GeneratedValue(strategy= GenerationType.IDENTITY )
     @SequenceGenerator(name = "MyUser_seq", sequenceName = "MyUser_seq")
     private var id:Long?=null;
-    private lateinit var login: String;
-    private  lateinit var password: String;
+
+     private lateinit var login: String;
+
+     private  lateinit var password: String;
+
+    private lateinit var username: String;
+
+    @Email(message = "The email format is not valid!")
     private lateinit var email: String;
     @Enumerated(EnumType.ORDINAL)
     private var typeUser: TypeUsers = TypeUsers.USER;
@@ -25,15 +35,18 @@ class User() : UserDetails {
     private lateinit var dateUpdate:Date;
     private   var codeVerification: Boolean=false;
     private var codeNumber: Long? =null;
+    private var changesAccount:Boolean?=null;
 
 
-    constructor(login: String, password: String, email: String):this() {
+    constructor(login: String, password: String, email: String, name:String):this() {
         this.login = login;
         setPassword(password);
         this.email = email;
         setCodeNumber();
         this.dateUpdate=Date();
         this.dateCreated=Date();
+        this.username=name;
+        this.changesAccount=false;
     }
 
     fun getId(): Long? {
@@ -45,6 +58,13 @@ class User() : UserDetails {
     }
     fun setCodeVerification(newStatus:Boolean) {
         this.codeVerification=newStatus;
+    }
+
+    fun getChangesAccount(): Boolean? {
+        return this.changesAccount;
+    }
+    fun setChangesAccount(newStatus:Boolean) {
+        this.changesAccount=newStatus;
     }
 
 
@@ -59,8 +79,14 @@ class User() : UserDetails {
 
 
     override fun getUsername(): String {
-        TODO("Not yet implemented")
+   return this.username;
+     }
+
+    public fun setUsername(name:String) {
+        this.username=name;
     }
+
+
 
     fun getEmail():String{
         return email;
@@ -88,9 +114,9 @@ class User() : UserDetails {
          return codeNumber;
     }
 
-    override fun toString(): String {
-        return "User(id=$id, login='$login', password='$password', email='$email', typeUser=$typeUser, dateCreated=$dateCreated, dateUpdate=$dateUpdate, codeVerification=$codeVerification, codeNumber=$codeNumber)"
-    }
+
+
+
 
     override fun getAuthorities(): MutableCollection<out GrantedAuthority> {
         if(this.typeUser==TypeUsers.ADMIN) return mutableListOf(SimpleGrantedAuthority("ADMIN"));
@@ -104,6 +130,9 @@ class User() : UserDetails {
     override fun getPassword(): String {
         return this.password
     }
+
+
+
 
 
 }
