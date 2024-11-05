@@ -1,13 +1,13 @@
 ## 🛠 Serviço de Login
 
-Este projeto tem como objetivo criar um serviço de login inicial que utiliza autenticação básica e permite operações essenciais para o usuário. Abaixo está uma visão geral das principais funcionalidades e tecnologias utilizadas.
-
+Este projeto tem como objetivo criar um serviço de login  que utiliza autenticação básica e permite operações essenciais para o usuário, além de ser integrado a arquitetura de microsserviços e integrado com menssageria para contatar e infomar ao usuário informações como validação de conta, criação de conta...
+ 
 ### 📋 Objetivos e Funcionalidades
 
 - **Autenticação de Usuário**: Utiliza o [Auth0](https://auth0.com/) para autenticação segura e gerenciamento de usuários.
 - **Criação e Atualização de Conta**: Permite ao usuário criar uma conta e atualizar dados pessoais de forma segura.
 - **Validação de Conta**: Inclui uma etapa de verificação para garantir a autenticidade e validade dos usuários.
-- **Integração com Serviço de E-mail**: Este serviço será posteriormente integrado ao módulo de envio de e-mails para notificação e confirmação de ações dos usuários.
+- **Integração com Serviço de E-mail**: Este serviço foi utilizado a biblioteca do Jarkarta Mail, para a construção de serviço e-mail para fazer envio de informações e contribuir para a lógica demandada.
 
 ### 🧩 Tecnologias Utilizadas
 
@@ -15,12 +15,6 @@ Este projeto tem como objetivo criar um serviço de login inicial que utiliza au
 - **Swagger**: Documentação da API para facilitar a visualização e interação com os endpoints.
 - **RabbitMQ**: Mensageria que conecta o serviço de login com o serviço de e-mail.
 
-### 🔍 Melhorias Futuras
-
-Ainda há algumas melhorias planejadas, incluindo:
-
-- Finalizar a integração completa com o serviço de e-mail.
-- Refinar a documentação e os fluxos de autenticação para melhorar a experiência do usuário.
 
 ### 💡 Ideação
 
