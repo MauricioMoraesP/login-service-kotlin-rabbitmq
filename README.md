@@ -13,6 +13,7 @@ Este projeto tem como objetivo criar um serviço de login inicial que utiliza au
 
 - **Spring Security** e **Spring Data**: Utilizados para implementar autenticação, autorização e persistência de dados de forma segura.
 - **Swagger**: Documentação da API para facilitar a visualização e interação com os endpoints.
+- **RabbitMQ**: Mensageria que conecta o serviço de login com o serviço de e-mail.
 
 ### 🔍 Melhorias Futuras
 
