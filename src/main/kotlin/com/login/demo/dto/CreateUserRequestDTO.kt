@@ -4,7 +4,7 @@ import jakarta.validation.constraints.*
 
 
 
-class CreateUserRequest(
+class CreateUserRequestDTO(
     @field:NotNull(message = "Login cannot be null!")
     @field:NotBlank(message = "Login cannot be blank!")
     @field:Size(min = 6, max = 25, message = "Your login must be between 6 and 25 characters!")

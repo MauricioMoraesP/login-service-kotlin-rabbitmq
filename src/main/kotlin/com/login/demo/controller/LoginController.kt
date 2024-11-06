@@ -3,9 +3,7 @@ import com.login.demo.dto.*
 import com.login.demo.service.TokenService
 import com.login.demo.model.User
 import com.login.demo.service.UserService
-import com.nimbusds.oauth2.sdk.ErrorResponse
 import jakarta.validation.Valid
-import org.springframework.amqp.core.Message
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
@@ -13,12 +11,8 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
-import org.springframework.security.core.userdetails.UsernameNotFoundException
 import org.springframework.validation.annotation.Validated
-import org.springframework.web.ErrorResponseException
-import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.*
-import javax.naming.AuthenticationException
 
 
 @RestController
@@ -31,7 +25,7 @@ private  var token: TokenService) {
 
 
     @PostMapping("/login")
-    fun login(@Valid @RequestBody loginDto: LoginDto): ResponseEntity<Map<String, String>> {
+    fun login(@Valid @RequestBody loginDto: LoginDTO): ResponseEntity<Map<String, String>> {
            try {
              val loginAndPassword = UsernamePasswordAuthenticationToken(loginDto.login, loginDto.password)
              val auth = this.authenticationManager.authenticate(loginAndPassword)
@@ -58,7 +52,7 @@ private  var token: TokenService) {
 
 
     @PostMapping("/create")
-     fun createAccount(@RequestBody @Valid request: CreateUserRequest): ResponseEntity<Map<String, String>> {
+     fun createAccount(@RequestBody @Valid request: CreateUserRequestDTO): ResponseEntity<Map<String, String>> {
         println(request)
         return try {
             val newUser = User(request.login, request.password, request.email, request.userName)

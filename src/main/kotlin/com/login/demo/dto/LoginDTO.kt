@@ -2,7 +2,7 @@ package com.login.demo.dto
 
 import jakarta.validation.constraints.NotNull
 
-data class LoginDto(
+data class LoginDTO(
     @NotNull
     val login:String,
     @NotNull
