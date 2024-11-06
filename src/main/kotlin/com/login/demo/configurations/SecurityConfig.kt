@@ -43,6 +43,7 @@ lateinit var  securityFilter: SecurityFilter;
      authorize(HttpMethod.POST,"/user/create", permitAll);
      authorize(HttpMethod.POST,"/user/login", permitAll);
      authorize(HttpMethod.PUT,"/user/edit-user", authenticated);
+     authorize(HttpMethod.GET,"/user/validate-user", permitAll);
      authorize( "/user/**", authenticated);
     }
      sessionManagement { sessionCreationPolicy = SessionCreationPolicy.STATELESS }

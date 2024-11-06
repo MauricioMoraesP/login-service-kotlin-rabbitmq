@@ -1,11 +1,14 @@
 package com.login.demo.controller
 import com.login.demo.service.TokenService
 import com.login.demo.dto.CreateUserRequest
+import com.login.demo.dto.EmailFormatDTO
 import com.login.demo.dto.LoginDto
 import com.login.demo.dto.UpdateUserDTO
 import com.login.demo.model.User
 import com.login.demo.service.UserService
 import jakarta.validation.Valid
+import org.springframework.amqp.core.Message
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -20,14 +23,10 @@ import javax.naming.AuthenticationException
 @RestController
 @RequestMapping("/user")
 @Validated
- class LoginController(private val userService: UserService) {
-
-
-    @Autowired
-     private lateinit var authenticationManager: AuthenticationManager;
-
-    @Autowired
-    private lateinit var token: TokenService;
+ class LoginController(private val userService: UserService,  @Autowired
+private  var rabbitTemplate : RabbitTemplate,@Autowired
+private  var authenticationManager: AuthenticationManager,  @Autowired
+private  var token: TokenService) {
 
 
     @PostMapping("/login")
@@ -58,17 +57,19 @@ import javax.naming.AuthenticationException
 
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
-    fun createAccount(@RequestBody @Valid request: CreateUserRequest): Map<String,String> {
-    println(request);
-         return try {
-             val newUser = User(request.login, request.password, request.email, request.userName,)
+    fun createAccount(@RequestBody @Valid request: CreateUserRequest): Map<String, String> {
+        println(request)
+        return try {
+            val newUser = User(request.login, request.password, request.email, request.userName)
             userService.create(newUser)
-           mapOf("message" to "Sucesso! Sua conta foi criada com sucesso!")
+             val routingKey = "users.v1.user-validate"
+            val objectSendEmail=EmailFormatDTO(newUser.getEmail(), "Sua conta foi criada com sucesso ${newUser.username}!!", "Criação de conta com sucesso!")
+             rabbitTemplate.convertAndSend("my.direct",routingKey, objectSendEmail)
+            mapOf("message" to "Sucesso! Sua conta foi criada com sucesso!")
         } catch (e: Exception) {
-            return mapOf("error" to "${e.message}")
+            mapOf("error" to "${e.message}")
         }
     }
-
 
 
     @PutMapping("/edit-user")
@@ -92,8 +93,57 @@ import javax.naming.AuthenticationException
     }
 
     //Validar conta do usuário conectar com microsserviço
-    @PutMapping("/validate-user")
-    fun validar(@RequestBody user: User): String {
+    @GetMapping("/validate-user")
+    fun validar(@RequestParam hashCode:String): String {
+    try {
+        println(hashCode);
+        val idValidation=token.verifyToken(hashCode);
+        val idUser = idValidation.replace("\"", "")?.trim()?.toLongOrNull()
+        if (idUser != null) {
+            val user = userService.getUserId(idUser).orElse(null)
+            println(user.getId().toString().toLong())
+            userService.verifyAccount(idUser);
+        }
+     }catch (e:Exception){
+        println(e.message);
+    }
         return "";
     }
+
+    @GetMapping("/link-verify")
+    fun sendEmailVerify(@RequestHeader("Authorization") authHeader: String): String {
+        val tokenBearer = authHeader.replace("Bearer ", "").trim()
+        try {
+            val idUser = token.verifyToken(tokenBearer)?.replace("\"", "")?.trim()?.toLongOrNull()
+            if (idUser != null) {
+                val user = userService.getUserId(idUser).orElse(null)
+                if (user != null) {
+                    val routingKey = "users.v1.user-validate"
+                    val verificationToken = token.generateTokenVerify(user)
+                    val verificationUrl = "http://localhost:8090/user/validate-user?hashCode=$verificationToken"
+
+                    val objectSendEmail = EmailFormatDTO(
+                        user.getEmail(),
+                        """
+                    <html>
+                    <body>
+                      <p>Olá! Acesse esse link para validação da sua conta:</p>
+                      <p><a href="$verificationUrl">Clique aqui!</a></p>
+                    </body>
+                    </html>
+                    """.trimIndent(),
+                        "Criação de conta com sucesso!"
+                    )
+
+                    rabbitTemplate.convertAndSend("my.direct", routingKey, objectSendEmail)
+                    return verificationUrl
+                }
+            }
+        } catch (e: Exception) {
+            println(e.message)
+        }
+        return ""
+    }
+
+
 }

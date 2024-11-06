@@ -78,7 +78,7 @@ class User() : UserDetails {
 
 
 
-    override fun getUsername(): String {
+    public override fun getUsername(): String {
    return this.username;
      }
 

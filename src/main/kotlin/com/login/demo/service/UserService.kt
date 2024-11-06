@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Email
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
+import java.util.*
 
 @Service
 class UserService {
@@ -68,6 +69,14 @@ class UserService {
     fun resetChanges(userId: Long) {
         val userOptional = userRepository.updateChangesUpdate(userId, false);
 
+    }
+
+    fun getUserId(userId:Long): Optional<User> {
+        return userRepository.findById(userId)
+    }
+
+    fun verifyAccount(userId:Long) {
+         userRepository.updateCodeVerifcation(userId,true);
     }
 
 

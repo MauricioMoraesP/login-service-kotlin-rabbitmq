@@ -39,4 +39,12 @@ interface UserRepository : JpaRepository<User, Long> {
     @Transactional
     @Query("UPDATE User u SET u.changesAccount = :changesAccount WHERE u.id = :id")
     fun updateChangesUpdate(@Param("id") id: Long, @Param("changesAccount") changesAccount: Boolean)
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE User u SET u.codeVerification = :codeVerification WHERE u.id = :id")
+    fun updateCodeVerifcation(@Param("id") id: Long, @Param("codeVerification") codeVerification: Boolean)
+
+
+
 }

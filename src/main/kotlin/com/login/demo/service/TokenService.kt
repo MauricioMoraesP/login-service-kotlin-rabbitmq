@@ -27,7 +27,6 @@ class TokenService{
             val algorithm = Algorithm.HMAC256(secret);
             var token:String= JWT.require(algorithm).withIssuer("auth-api").build().verify(token).getSubject();
             return token;
-
         }
         catch (exception: JWTVerificationException){
            return "";
@@ -84,6 +83,25 @@ class TokenService{
         }
 
     }
+
+
+    fun generateTokenVerify(user: User): String {
+        try {
+            val algorithm = Algorithm.HMAC256(secret)
+            return JWT.create()
+                .withIssuer("auth-api")
+                .withSubject(user.getLogin())
+                .withClaim("userId", user.getId().toString())
+                .withClaim("code", user.getCodeNumber())
+                .withExpiresAt(genExpirationDate())
+                .sign(algorithm)
+        } catch (exception: JWTVerificationException) {
+            throw RuntimeException("Error while generating token", exception)
+        }
+    }
+
+
+
 
 
 
