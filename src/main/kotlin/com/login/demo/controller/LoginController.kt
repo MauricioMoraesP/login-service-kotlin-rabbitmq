@@ -1,11 +1,9 @@
 package com.login.demo.controller
+import com.login.demo.dto.*
 import com.login.demo.service.TokenService
-import com.login.demo.dto.CreateUserRequest
-import com.login.demo.dto.EmailFormatDTO
-import com.login.demo.dto.LoginDto
-import com.login.demo.dto.UpdateUserDTO
 import com.login.demo.model.User
 import com.login.demo.service.UserService
+import com.nimbusds.oauth2.sdk.ErrorResponse
 import jakarta.validation.Valid
 import org.springframework.amqp.core.Message
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -13,9 +11,12 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.authentication.AuthenticationManager
+import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.userdetails.UsernameNotFoundException
 import org.springframework.validation.annotation.Validated
+import org.springframework.web.ErrorResponseException
+import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.*
 import javax.naming.AuthenticationException
 
@@ -31,7 +32,7 @@ private  var token: TokenService) {
 
     @PostMapping("/login")
     fun login(@Valid @RequestBody loginDto: LoginDto): ResponseEntity<Map<String, String>> {
-         try {
+           try {
              val loginAndPassword = UsernamePasswordAuthenticationToken(loginDto.login, loginDto.password)
              val auth = this.authenticationManager.authenticate(loginAndPassword)
              val tokenInit= token.generateToken(auth.principal as User)
@@ -45,73 +46,81 @@ private  var token: TokenService) {
                      return ResponseEntity.ok(mapOf("token" to tokenInit))
                  }
              }
-             throw UsernameNotFoundException("Account not found");
+             throw BadCredentialsException("Account not found!");
           }
-         catch (ex: AuthenticationException) {
-              val errorMessage = ex.message ?: "Unauthorized"
-             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(mapOf("error" to errorMessage))
+         catch (ex:BadCredentialsException){
+             val errorMessage = ex.message ?: "Unauthorized"
+                return  ResponseEntity.status(HttpStatus.BAD_REQUEST).body(mapOf("error" to errorMessage))
          }
+
     }
 
 
 
     @PostMapping("/create")
-    @ResponseStatus(HttpStatus.CREATED)
-    fun createAccount(@RequestBody @Valid request: CreateUserRequest): Map<String, String> {
+     fun createAccount(@RequestBody @Valid request: CreateUserRequest): ResponseEntity<Map<String, String>> {
         println(request)
         return try {
             val newUser = User(request.login, request.password, request.email, request.userName)
             userService.create(newUser)
              val routingKey = "users.v1.user-validate"
-            val objectSendEmail=EmailFormatDTO(newUser.getEmail(), "Sua conta foi criada com sucesso ${newUser.username}!!", "Criação de conta com sucesso!")
+             val objectSendEmail=EmailFormatDTO(newUser.getEmail(), "Sua conta foi criada com sucesso ${newUser.username}!!", "Criação de conta com sucesso!")
              rabbitTemplate.convertAndSend("my.direct",routingKey, objectSendEmail)
-            mapOf("message" to "Sucesso! Sua conta foi criada com sucesso!")
-        } catch (e: Exception) {
-            mapOf("error" to "${e.message}")
+             return ResponseEntity.status(HttpStatus.CREATED).body(mapOf("message" to "Sucesso! Sua conta foi criada com sucesso!"))
         }
+
+        catch (e: Exception) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(mapOf("error" to "${e.message}"))        }
     }
 
 
     @PutMapping("/edit-user")
     @ResponseStatus(HttpStatus.OK)
     fun changeUser(@RequestHeader("Authorization") authHeader: String,
-                   @RequestBody updateUser: UpdateUserDTO): String {
+                   @RequestBody updateUser: UpdateUserDTO): Any {
          val tokenBearer = authHeader.replace("Bearer ", "").trim()
            try {
              val idUser=  token.verifyToken(tokenBearer)?.replace("\"", "")?.trim();
-               println(token.verifyTokenChangesAccount(tokenBearer));
-                if(!(idUser.isNullOrEmpty())){
-                      userService.updateUser(idUser.toLong(),updateUser.userName, updateUser.password, updateUser.email,updateUser.login)
-             }
+
+                 if(!(idUser.isNullOrEmpty())){
+                     val user = userService.getUserId(idUser.toLong()).orElse(null)
+                     if(user.getCodeVerification()==false){
+
+                      }else{
+                         userService.updateUser(idUser.toLong(),updateUser.userName, updateUser.password, updateUser.email,updateUser.login);
+                         return ResponseEntity.status(HttpStatus.OK).body( "atualização feita com sucesso!");
+                     }
+
+              }
 
          }
          catch (e: Exception) {
-    println(e.message)
-         }
+             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body( "Não foi possível realizar a atualização, tente novamente!");
+          }
 
         return ""
     }
 
-    //Validar conta do usuário conectar com microsserviço
-    @GetMapping("/validate-user")
+     @GetMapping("/validate-user")
+     @ResponseStatus(HttpStatus.OK)
     fun validar(@RequestParam hashCode:String): String {
-    try {
-        println(hashCode);
+      try {
         val idValidation=token.verifyToken(hashCode);
         val idUser = idValidation.replace("\"", "")?.trim()?.toLongOrNull()
         if (idUser != null) {
             val user = userService.getUserId(idUser).orElse(null)
             println(user.getId().toString().toLong())
             userService.verifyAccount(idUser);
+            return "Validação feita com sucesso!"
         }
+          throw Exception("Usuário não encontrado ou token inválido")
      }catch (e:Exception){
-        println(e.message);
+        return e.message.toString()
     }
-        return "";
     }
 
     @GetMapping("/link-verify")
-    fun sendEmailVerify(@RequestHeader("Authorization") authHeader: String): String {
+    fun sendEmailVerify(@RequestHeader("Authorization") authHeader: String) {
         val tokenBearer = authHeader.replace("Bearer ", "").trim()
         try {
             val idUser = token.verifyToken(tokenBearer)?.replace("\"", "")?.trim()?.toLongOrNull()
@@ -136,13 +145,13 @@ private  var token: TokenService) {
                     )
 
                     rabbitTemplate.convertAndSend("my.direct", routingKey, objectSendEmail)
-                    return verificationUrl
+
                 }
             }
         } catch (e: Exception) {
-            println(e.message)
+
         }
-        return ""
+
     }
 
 

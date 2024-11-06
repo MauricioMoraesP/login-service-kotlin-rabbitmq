@@ -1,10 +1,8 @@
 package com.login.demo.service
 
-import com.login.demo.dto.ErrorDto
-import com.login.demo.model.User
+ import com.login.demo.model.User
 import com.login.demo.repository.UserRepository
-import jakarta.validation.constraints.Email
-import org.springframework.beans.factory.annotation.Autowired
+ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import java.util.*
@@ -78,6 +76,8 @@ class UserService {
     fun verifyAccount(userId:Long) {
          userRepository.updateCodeVerifcation(userId,true);
     }
+
+
 
 
 }
