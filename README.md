@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 ## 🛠 Serviço de Login
 
 Este projeto tem como objetivo criar um serviço de login  que utiliza autenticação básica e permite operações essenciais para o usuário, além de ser integrado a arquitetura de microsserviços e integrado com menssageria para contatar e infomar ao usuário informações como validação de conta, criação de conta...
@@ -29,7 +29,3 @@ Este projeto foi uma oportunidade para me aprofundar em conceitos essenciais, co
 
 - **Spring Security**: Para garantir a segurança no acesso e na atualização dos dados dos usuários.
 - **Spring Data**: Para facilitar a persistência e manipulação dos dados de maneira eficiente.
-
-=======
-# service-email-mensageria-kotlin
->>>>>>> 5b8ebbd69e9dbef8d02bf6d926e916ee5330c831
